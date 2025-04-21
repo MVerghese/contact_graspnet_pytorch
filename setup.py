@@ -12,6 +12,7 @@ _packages = find_packages()
 
 packages = []
 for p in _packages:
+    print(p)
     if p.startswith('contact_graspnet_pytorch'):
         packages.append(p)
 

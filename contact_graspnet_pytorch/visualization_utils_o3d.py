@@ -10,7 +10,7 @@ from matplotlib import cm
 
 from scipy.spatial.transform import Rotation as R
 
-import mesh_utils
+import contact_graspnet_pytorch.mesh_utils as mesh_utils
 
 
 # To fix GLIB open3d error:
@@ -140,6 +140,9 @@ def visualize_grasps(full_pc, pred_grasps_cam, scores, plot_opencv_cam=False, pc
     """
 
     print('Visualizing...')
+    if pc_colors is None:
+        pc_colors = np.ones_like(full_pc) * 128
+
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(full_pc)
     pcd.colors = o3d.utility.Vector3dVector(pc_colors.astype(np.float64) / 255)

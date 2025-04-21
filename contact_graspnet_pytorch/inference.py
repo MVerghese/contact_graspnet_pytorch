@@ -39,6 +39,7 @@ def inference(global_config,
 
     # Load the weights
     model_checkpoint_dir = os.path.join(ckpt_dir, 'checkpoints')
+    print("MODEL CHECKPOINT: ", model_checkpoint_dir)
     checkpoint_io = CheckpointIO(checkpoint_dir=model_checkpoint_dir, model=grasp_estimator.model)
     try:
         load_dict = checkpoint_io.load('model.pt')
@@ -55,6 +56,7 @@ def inference(global_config,
 
         pc_segments = {}
         segmap, rgb, depth, cam_K, pc_full, pc_colors = load_available_input_data(p, K=K)
+        pc_colors = np.load("colors.npy")
         
         if segmap is None and (local_regions or filter_grasps):
             raise ValueError('Need segmentation map to extract local regions or filter grasps')
@@ -92,12 +94,14 @@ if __name__ == "__main__":
     parser.add_argument('--np_path', default='test_data/7.npy', help='Input data: npz/npy file with keys either "depth" & camera matrix "K" or just point cloud "pc" in meters. Optionally, a 2D "segmap"')
     parser.add_argument('--K', default=None, help='Flat Camera Matrix, pass as "[fx, 0, cx, 0, fy, cy, 0, 0 ,1]"')
     parser.add_argument('--z_range', default=[0.2,1.8], help='Z value threshold to crop the input point cloud')
-    parser.add_argument('--local_regions', action='store_true', default=True, help='Crop 3D local regions around given segments.')
-    parser.add_argument('--filter_grasps', action='store_true', default=True,  help='Filter grasp contacts according to segmap.')
+    parser.add_argument('--local_regions', action='store_true', default=False, help='Crop 3D local regions around given segments.')
+    parser.add_argument('--filter_grasps', action='store_true', default=False,  help='Filter grasp contacts according to segmap.')
     parser.add_argument('--skip_border_objects', action='store_true', default=False,  help='When extracting local_regions, ignore segments at depth map boundary.')
     parser.add_argument('--forward_passes', type=int, default=1,  help='Run multiple parallel forward passes to mesh_utils more potential contact points.')
     parser.add_argument('--arg_configs', nargs="*", type=str, default=[], help='overwrite config parameters')
     FLAGS = parser.parse_args()
+
+    print("CONFIG CHECKPOINT: ", FLAGS.ckpt_dir)
 
     global_config = config_utils.load_config(FLAGS.ckpt_dir, batch_size=FLAGS.forward_passes, arg_configs=FLAGS.arg_configs)
     

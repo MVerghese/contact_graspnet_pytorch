@@ -6,8 +6,8 @@ from contact_graspnet_pytorch.contact_grasp_estimator import GraspEstimator
 from contact_graspnet_pytorch import config_utils
 
 from contact_graspnet_pytorch.visualization_utils_o3d import visualize_grasps, show_image
-from contact_graspnet_pytorch.checkpoints import CheckpointIO 
-
+from contact_graspnet_pytorch.checkpoints import CheckpointIO
+# from utils import *
 class Generator:
 	def __init__(self,checkpoint_path="/home/mverghese/RobotControl/contact_graspnet_pytorch/checkpoints/contact_graspnet"):
 		global_config = config_utils.load_config(checkpoint_path, batch_size=1, arg_configs=[])
@@ -29,7 +29,15 @@ class Generator:
 																					   local_regions=False, 
 																					   filter_grasps=False, 
 																					   forward_passes=3)
-		return pred_grasps_cam[-1], scores[-1], contact_pts[-1], gripper_openings[-1]
+		# print(np.shape(pred_grasps_cam[-1]))
+		pred_grasps_cam = pred_grasps_cam[-1]
+		# print(np.shape(pred_grasps_cam))
+		for i in range(len(pred_grasps_cam)):
+			pred_grasps_cam[i][:3,1] = np.cross(pred_grasps_cam[i][:3,2],pred_grasps_cam[i][:3,0])
+			
+
+
+		return pred_grasps_cam, scores[-1], contact_pts[-1], gripper_openings[-1]
 
 	def masked_inference(self,full_pc, object_pc):
 		grasps, scores, contact_pts, gripper_openings = self.inference(full_pc)
@@ -56,6 +64,12 @@ def main():
 	pc = np.load("point_cloud.npy")
 	pc_colors = np.load("colors.npy")
 	pred_grasps_cam, scores, contact_pts, gripper_openings = generator.inference(pc)
+	for grasp in pred_grasps_cam:
+		R = grasp[:3,:3]
+		# R[:,1] = np.cross(R[:,0],R[:,2])
+		print("Magniudes: ",np.linalg.norm(R[:,0]), np.linalg.norm(R[:,1]), np.linalg.norm(R[:,2]))
+		print("Cross product diff", np.linalg.norm(np.cross(R[:,0],R[:,2]) - R[:,1]))
+		print("Dot Products", np.dot(R[:,0],R[:,1]), np.dot(R[:,0],R[:,2]), np.dot(R[:,1],R[:,2]))
 	generator.visualize(pc, pred_grasps_cam, scores, pc_colors)
 	print(gripper_openings)
 
